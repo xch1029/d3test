@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        circle{
+            transition: all 2s ease;
+        }
+        .selected {
+            fill: red;
+            stroke: brown;
+        }
+    </style>
+</head>
+<body>
+    <svg width="960" height="500"></svg>
+    <script src="node_modules/d3/build/d3.js"></script>
+    <script>
+        const randomX = d3.randomUniform(0, 10),
+            randomY = d3.randomNormal(0.5, 0.12),
+            data = d3.range(800).map(function() { return [randomX(), randomY()]; });
+
+        const svg = d3.select("svg"),
+            margin = {top: 194, right: 50, bottom: 214, left: 50},
+            width = +svg.attr("width") - margin.left - margin.right,
+            height = +svg.attr("height") - margin.top - margin.bottom,
+            g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        const x = d3.scaleLinear()
+            .domain([0, 10])
+            .range([0, width]);
+
+        const y = d3.scaleLinear()
+            .range([height, 0]);
+
+        const brush = d3.brushX()
+            .extent([[0, 0], [width, height]])
+            .on("start brush", brushed);
+
+        const dot = g.append("g")
+            .attr("fill-opacity", 0.2)
+            .selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("transform", function(d) { return "translate(" + x(d[0]) + "," + y(d[1]) + ")"; })
+            .attr("r", 3.5);
+
+        g.append("g")
+            .call(brush)
+            .call(brush.move, [3, 5].map(x))
+            .selectAll(".overlay")
+            .on("mousedown touchstart", beforebrushed, true);
+
+        g.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        function beforebrushed() {
+            d3.event.stopImmediatePropagation();
+            d3.select(this.parentNode).transition().call(brush.move, x.range());
+        }
+
+        function brushed() {
+            const extent = d3.event.selection.map(x.invert);
+            dot.classed("selected", function(d) { return extent[0] <= d[0] && d[0] <= extent[1]; });
+        }
+    </script>
+</body>
+</html>
