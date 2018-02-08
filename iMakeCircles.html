@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>点击生成圆</title>
+    <style>
+        button{
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        circle {
+            fill: none;
+            stroke: #000;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body>
+    <button>Click Me</button>
+    <svg width="960" height="500"></svg>
+    <script src="node_modules/d3/build/d3.js"></script>
+    <script>
+        const svg = d3.select('svg'),
+            margin = {top: 30, right: 30, bottom: 30, left: 30},
+            width = +svg.attr("width") - margin.left - margin.right,
+            height = +svg.attr("height") - margin.top - margin.bottom,
+            g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        const x = d3.scaleTime().range([0, width]);
+        const xAxis = d3.axisBottom(x);
+        const xAxisG = g.append("g")
+            .attr("transform", "translate(0, " + height + ")");
+        d3.timer(function() {
+            const now = Date.now();
+            x.domain([now - 5000, now]);
+            xAxisG.call(xAxis);
+        });
+
+        d3.select('button').on('click', () => {
+            const time = Date.now();
+
+            const circle = g.append('circle')
+                .attr('r', 80)
+                .attr("stroke-opacity", 0)
+                .attr("cy", Math.random() * height);
+
+            circle.transition('time')
+                .duration(5000)
+                .ease(d3.easeLinear)
+                .attrTween("cx", function(d) { return function(t) { return x(time); }; })
+
+            circle.transition()
+                .duration(750)
+                .ease(d3.easeCubicOut)
+                .attr("r", 3.5)
+                .attr("stroke-opacity", 1)
+                .transition()
+                .delay(5000 - 750 * 2)
+                .ease(d3.easeCubicIn)
+                .attr("r", 80)
+                .attr("stroke-opacity", 0)
+                .remove();
+        })
+    </script>
+</body>
+</html>
